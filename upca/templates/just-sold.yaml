@@ -1,0 +1,20 @@
+id: just-sold
+name: Just Sold
+audience: property
+videoType: Just Sold
+duration: 30
+fps: 30
+compositionId: UPCAJustListed
+rendererFamily: upca-just-listed
+headline: JUST SOLD
+ctaText: SEE SIMILAR HOMES
+livingLabel: THE HOME
+roomsLabel: INSIDE
+statsKicker: SOLD
+locationKicker: THE NEIGHBOURHOOD
+requiredFields:
+  - address
+  - city
+  - province
+  - price
+  - agent

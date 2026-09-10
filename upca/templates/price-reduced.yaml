@@ -1,0 +1,20 @@
+id: price-reduced
+name: Price Reduced
+audience: property
+videoType: Price Reduced
+duration: 30
+fps: 30
+compositionId: UPCAJustListed
+rendererFamily: upca-just-listed
+headline: PRICE REDUCED
+ctaText: BOOK A SHOWING
+livingLabel: INTERIORS
+roomsLabel: PRIVATE ROOMS
+statsKicker: NEW PRICE
+locationKicker: LOCATION
+requiredFields:
+  - address
+  - city
+  - province
+  - price
+  - agent

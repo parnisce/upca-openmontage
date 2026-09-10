@@ -1,0 +1,99 @@
+id: just-listed
+name: Just Listed
+audience: property
+videoType: Just Listed
+duration: 30
+fps: 30
+compositionId: UPCAJustListed
+rendererFamily: upca-just-listed
+headline: JUST LISTED
+ctaText: BOOK A SHOWING
+livingLabel: INTERIORS
+roomsLabel: PRIVATE ROOMS
+statsKicker: LISTED AT
+locationKicker: LOCATION
+requiredFields:
+  - address
+  - city
+  - province
+  - price
+  - agent
+scenes:
+  - id: sc1
+    label: Hero
+    start: 0
+    end: 3
+    type: animation
+    photoKind: exterior
+    narrative_role: introduce_subject
+    shot_intent: Announce the listing over the strongest exterior
+    information_role: Viewer learns this home is newly listed
+    shot_size: wide
+    camera_movement: zoom_in
+    hero_moment: true
+  - id: sc2
+    label: Exterior address
+    start: 3
+    end: 8
+    type: broll
+    photoKind: exterior
+    narrative_role: establish_context
+    shot_intent: Place the home on its street and name the address
+    information_role: Viewer can find the property
+    shot_size: establishing
+    camera_movement: pan_right
+  - id: sc3
+    label: Living interior
+    start: 8
+    end: 13
+    type: broll
+    photoKind: interior
+    narrative_role: emotional_beat
+    shot_intent: Show living room and kitchen as the social heart
+    information_role: Viewer feels the main living spaces
+    shot_size: medium
+    camera_movement: dolly_in
+  - id: sc4
+    label: Beds and baths
+    start: 13
+    end: 18
+    type: broll
+    photoKind: interior
+    narrative_role: evidence
+    shot_intent: Walk private rooms after the public rooms
+    information_role: Viewer understands bedroom and bathroom count
+    shot_size: medium_close
+    camera_movement: pan_left
+  - id: sc5
+    label: Statistics
+    start: 18
+    end: 23
+    type: text_card
+    photoKind: exterior
+    narrative_role: deliver_payload
+    shot_intent: Hold the four numbers a buyer compares first
+    information_role: Price, beds, baths, square footage
+    shot_size: close_up
+    camera_movement: static
+  - id: sc6
+    label: Location
+    start: 23
+    end: 27
+    type: broll
+    photoKind: exterior
+    narrative_role: establish_context
+    shot_intent: Widen to neighborhood identity
+    information_role: Viewer knows the city and area
+    shot_size: extreme_wide
+    camera_movement: tilt_up
+  - id: sc7
+    label: Agent CTA
+    start: 27
+    end: 30
+    type: animation
+    photoKind: agent
+    narrative_role: call_to_action
+    shot_intent: Land on the agent and a booking CTA
+    information_role: Viewer knows who to call
+    shot_size: medium_close
+    camera_movement: static

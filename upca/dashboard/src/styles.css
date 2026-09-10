@@ -140,6 +140,9 @@ h2 {
   font-weight: 600;
   font-family: Inter, system-ui, sans-serif;
 }
+.property-media { margin: 0 0 8px; }
+.property-media h4:first-child { margin-top: 0; }
+.media-hint { margin: 0 0 14px; }
 .listing-head {
   display: flex;
   justify-content: space-between;
@@ -185,6 +188,7 @@ h2 {
   border: 1px solid var(--line);
 }
 .photo-tile img,
+.photo-tile video,
 .photo-fallback {
   width: 100%;
   height: 110px;

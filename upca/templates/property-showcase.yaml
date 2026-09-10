@@ -1,0 +1,20 @@
+id: property-showcase
+name: Property Showcase
+audience: property
+videoType: Property Showcase
+duration: 30
+fps: 30
+compositionId: UPCAJustListed
+rendererFamily: upca-just-listed
+headline: SHOWCASE
+ctaText: BOOK A TOUR
+livingLabel: INSIDE
+roomsLabel: THE HOME
+statsKicker: LISTED AT
+locationKicker: THE NEIGHBOURHOOD
+requiredFields:
+  - address
+  - city
+  - province
+  - price
+  - agent

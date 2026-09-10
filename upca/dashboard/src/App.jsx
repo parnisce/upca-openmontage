@@ -87,27 +87,117 @@ function Dropzone({label, hint, accept, multiple = true, disabled, onFiles}) {
   );
 }
 
+function photoSrc(item) {
+  if (item.previewUrl) return item.previewUrl;
+  if (String(item.mime || "").startsWith("image/")) return `/api/media/${item.id}/file`;
+  return "";
+}
+
 function PhotoStrip({items, empty, onRemove}) {
   if (!items.length) {
     return <p className="muted">{empty}</p>;
   }
   return (
     <div className="photo-strip">
-      {items.map((item) => (
-        <figure className="photo-tile" key={item.id}>
-          {String(item.mime || "").startsWith("image/") ? (
-            <img src={`/api/media/${item.id}/file`} alt={item.filename} />
-          ) : (
-            <div className="photo-fallback">{item.filename}</div>
-          )}
-          <figcaption>{item.filename}</figcaption>
-          {onRemove ? (
-            <button type="button" className="photo-remove" onClick={() => onRemove(item.id)}>
-              Remove
-            </button>
-          ) : null}
-        </figure>
-      ))}
+      {items.map((item) => {
+        const src = photoSrc(item);
+        const isVideo = String(item.mime || "").startsWith("video/");
+        return (
+          <figure className="photo-tile" key={item.id}>
+            {src && !isVideo ? (
+              <img src={src} alt={item.filename} />
+            ) : isVideo && item.previewUrl ? (
+              <video src={item.previewUrl} muted />
+            ) : (
+              <div className="photo-fallback">{item.filename}</div>
+            )}
+            <figcaption>{item.filename}</figcaption>
+            {onRemove ? (
+              <button type="button" className="photo-remove" onClick={() => onRemove(item.id)}>
+                Remove
+              </button>
+            ) : null}
+          </figure>
+        );
+      })}
+    </div>
+  );
+}
+
+const EMPTY_PENDING_MEDIA = {exterior: [], interior: [], video: []};
+
+function fileToPending(file) {
+  return {
+    id: `pending-${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2, 7)}`,
+    filename: file.name,
+    mime: file.type || "application/octet-stream",
+    file,
+    previewUrl: URL.createObjectURL(file),
+  };
+}
+
+function revokePending(groups) {
+  for (const list of Object.values(groups || {})) {
+    for (const item of list || []) {
+      if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+    }
+  }
+}
+
+function PropertyMediaFields({
+  exteriors,
+  interiors,
+  clips,
+  busy,
+  onAddExterior,
+  onAddInterior,
+  onAddVideo,
+  onRemoveExterior,
+  onRemoveInterior,
+  onRemoveVideo,
+}) {
+  return (
+    <div className="listing-card property-media">
+      <h4>Add images</h4>
+      <p className="muted media-hint">Exterior photos become the cover. Add them here before or after saving.</p>
+      <PhotoStrip
+        items={exteriors}
+        empty="No exterior photos yet. Drop files below."
+        onRemove={onRemoveExterior}
+      />
+      <Dropzone
+        label="Add exterior photos"
+        hint="Click or drop JPG, PNG, or WebP"
+        accept="image/*"
+        disabled={busy}
+        onFiles={onAddExterior}
+      />
+      <h4>Interior photos</h4>
+      <PhotoStrip
+        items={interiors}
+        empty="No interior photos yet. Drop files below."
+        onRemove={onRemoveInterior}
+      />
+      <Dropzone
+        label="Add interior photos"
+        hint="Living rooms, kitchen, bedrooms, baths"
+        accept="image/*"
+        disabled={busy}
+        onFiles={onAddInterior}
+      />
+      <h4>Optional video clips</h4>
+      <PhotoStrip
+        items={clips}
+        empty="No clips attached."
+        onRemove={onRemoveVideo}
+      />
+      <Dropzone
+        label="Add walkthrough clips"
+        hint="Optional MP4 / MOV / WebM"
+        accept="video/*"
+        disabled={busy}
+        onFiles={onAddVideo}
+      />
     </div>
   );
 }
@@ -284,6 +374,7 @@ export function App() {
   const [editingProperty, setEditingProperty] = useState(null);
   const [propertyScreen, setPropertyScreen] = useState("list");
   const [propertyFormKey, setPropertyFormKey] = useState(0);
+  const [pendingMedia, setPendingMedia] = useState(EMPTY_PENDING_MEDIA);
   const [editingAgent, setEditingAgent] = useState(null);
   const [agentFormKey, setAgentFormKey] = useState(0);
   const [jobForm, setJobForm] = useState({
@@ -391,8 +482,8 @@ export function App() {
     });
   };
 
-  const attachMediaFiles = async (propertyId, files, kind) => {
-    const property = properties.find((row) => row.id === propertyId);
+  const attachMediaFiles = async (propertyId, files, kind, propertyRow) => {
+    const property = propertyRow || properties.find((row) => row.id === propertyId);
     if (!property) {
       throw new Error("Select a property first");
     }
@@ -404,10 +495,32 @@ export function App() {
       nextIds.push(uploaded.id);
     }
     mediaIds[key] = nextIds;
-    await request(`/properties/${propertyId}`, {
+    return request(`/properties/${propertyId}`, {
       method: "PUT",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({...property, mediaIds}),
+    });
+  };
+
+  const queuePendingFiles = (kind, files) => {
+    setPendingMedia((current) => ({
+      ...current,
+      [kind]: [...current[kind], ...files.map(fileToPending)],
+    }));
+  };
+
+  const removePendingFile = (kind, id) => {
+    setPendingMedia((current) => {
+      const match = current[kind].find((item) => item.id === id);
+      if (match?.previewUrl) URL.revokeObjectURL(match.previewUrl);
+      return {...current, [kind]: current[kind].filter((item) => item.id !== id)};
+    });
+  };
+
+  const clearPendingMedia = () => {
+    setPendingMedia((current) => {
+      revokePending(current);
+      return EMPTY_PENDING_MEDIA;
     });
   };
 
@@ -451,6 +564,7 @@ export function App() {
                 if (name === "Properties") {
                   setPropertyScreen("list");
                   setEditingProperty(null);
+                  clearPendingMedia();
                 }
                 setPage(name);
               }}
@@ -467,7 +581,7 @@ export function App() {
         {page === "Dashboard" && (
           <>
             <h1>Video Factory</h1>
-            <p className="lede">Create listing films from property records, agents, and the Just Listed template. OpenMontage and Backlot stay in place.</p>
+            <p className="lede">Create listing films from property records, agents, and seven templates. Photos crop to 9:16, 16:9, or 1:1. OpenMontage and Backlot stay in place.</p>
             <div className="grid">
               <div className="card"><div className="stat">{counts.properties}<span>PROPERTIES</span></div></div>
               <div className="card"><div className="stat">{counts.agents}<span>AGENTS</span></div></div>
@@ -514,6 +628,7 @@ export function App() {
                 className="btn"
                 type="button"
                 onClick={() => {
+                  clearPendingMedia();
                   setEditingProperty(null);
                   setPropertyFormKey((key) => key + 1);
                   setPropertyScreen("edit");
@@ -543,6 +658,7 @@ export function App() {
                           className="btn"
                           type="button"
                           onClick={() => {
+                            clearPendingMedia();
                             setEditingProperty(property);
                             setPropertyScreen("edit");
                           }}
@@ -555,7 +671,7 @@ export function App() {
                 })}
               </div>
             ) : (
-              <p className="muted">No listings yet. Create a property, then add photos on its details page.</p>
+              <p className="muted">No listings yet. Create a property and add photos on the details page.</p>
             )}
           </>
         )}
@@ -564,41 +680,79 @@ export function App() {
           const property = editingProperty?.id
             ? properties.find((row) => row.id === editingProperty.id) || editingProperty
             : null;
-          const exteriors = itemsForIds(media, property?.mediaIds?.exteriorPhotos);
-          const interiors = itemsForIds(media, property?.mediaIds?.interiorPhotos);
-          const clips = itemsForIds(media, property?.mediaIds?.videoClips);
+          const exteriors = property?.id
+            ? itemsForIds(media, property.mediaIds?.exteriorPhotos)
+            : pendingMedia.exterior;
+          const interiors = property?.id
+            ? itemsForIds(media, property.mediaIds?.interiorPhotos)
+            : pendingMedia.interior;
+          const clips = property?.id
+            ? itemsForIds(media, property.mediaIds?.videoClips)
+            : pendingMedia.video;
+          const goBack = () => {
+            clearPendingMedia();
+            setEditingProperty(null);
+            setPropertyScreen("list");
+          };
           return (
             <>
-              <button
-                className="text-link"
-                type="button"
-                onClick={() => {
-                  setEditingProperty(null);
-                  setPropertyScreen("list");
-                }}
-              >
+              <button className="text-link" type="button" onClick={goBack}>
                 ← Properties
               </button>
               <h1>{property?.address || "New property"}</h1>
               <p className="lede">
                 {property
                   ? "Update listing details and attach the photos the Just Listed film uses."
-                  : "Save the listing first, then you can add exterior and interior photos."}
+                  : "Add listing photos here, then fill in the details and create the property."}
               </p>
+              <PropertyMediaFields
+                exteriors={exteriors}
+                interiors={interiors}
+                clips={clips}
+                busy={busy}
+                onAddExterior={(files) => (
+                  property?.id
+                    ? run(() => attachMediaFiles(property.id, files, "exterior"))
+                    : queuePendingFiles("exterior", files)
+                )}
+                onAddInterior={(files) => (
+                  property?.id
+                    ? run(() => attachMediaFiles(property.id, files, "interior"))
+                    : queuePendingFiles("interior", files)
+                )}
+                onAddVideo={(files) => (
+                  property?.id
+                    ? run(() => attachMediaFiles(property.id, files, "video"))
+                    : queuePendingFiles("video", files)
+                )}
+                onRemoveExterior={(id) => (
+                  property?.id
+                    ? run(() => detachPropertyMedia(property.id, id, "exterior"))
+                    : removePendingFile("exterior", id)
+                )}
+                onRemoveInterior={(id) => (
+                  property?.id
+                    ? run(() => detachPropertyMedia(property.id, id, "interior"))
+                    : removePendingFile("interior", id)
+                )}
+                onRemoveVideo={(id) => (
+                  property?.id
+                    ? run(() => detachPropertyMedia(property.id, id, "video"))
+                    : removePendingFile("video", id)
+                )}
+              />
+              <h2 style={{marginTop: 36}}>Listing details</h2>
               <PropertyForm
                 key={property?.id || `new-${propertyFormKey}`}
                 initial={property}
-                onCancel={() => {
-                  setEditingProperty(null);
-                  setPropertyScreen("list");
-                }}
+                onCancel={goBack}
                 onSave={(payload) => run(async () => {
                   const current = properties.find((row) => row.id === payload.id);
                   const body = {
                     ...payload,
                     mediaIds: current?.mediaIds || payload.mediaIds || {},
                   };
-                  const saved = payload.id
+                  let saved = payload.id
                     ? await request(`/properties/${payload.id}`, {
                         method: "PUT",
                         headers: {"Content-Type": "application/json"},
@@ -609,73 +763,47 @@ export function App() {
                         headers: {"Content-Type": "application/json"},
                         body: JSON.stringify(body),
                       });
+                  if (!payload.id) {
+                    const queued = [
+                      ["exterior", pendingMedia.exterior],
+                      ["interior", pendingMedia.interior],
+                      ["video", pendingMedia.video],
+                    ];
+                    for (const [kind, items] of queued) {
+                      const files = items.map((item) => item.file).filter(Boolean);
+                      if (!files.length) continue;
+                      saved = await attachMediaFiles(saved.id, files, kind, saved);
+                    }
+                    revokePending(pendingMedia);
+                    setPendingMedia(EMPTY_PENDING_MEDIA);
+                  }
                   setEditingProperty(saved);
                   setPropertyScreen("edit");
                 })}
               />
               {property?.id ? (
-                <div className="listing-card" style={{marginTop: 36}}>
-                  <h4>Exterior photos</h4>
-                  <PhotoStrip
-                    items={exteriors}
-                    empty="No exterior photos yet. Drop files below."
-                    onRemove={(id) => run(() => detachPropertyMedia(property.id, id, "exterior"))}
-                  />
-                  <Dropzone
-                    label="Add exterior photos"
-                    hint="Click or drop JPG, PNG, or WebP"
-                    accept="image/*"
+                <div className="row" style={{marginTop: 28}}>
+                  <button
+                    className="btn danger"
+                    type="button"
                     disabled={busy}
-                    onFiles={(files) => run(() => attachMediaFiles(property.id, files, "exterior"))}
-                  />
-                  <h4>Interior photos</h4>
-                  <PhotoStrip
-                    items={interiors}
-                    empty="No interior photos yet. Drop files below."
-                    onRemove={(id) => run(() => detachPropertyMedia(property.id, id, "interior"))}
-                  />
-                  <Dropzone
-                    label="Add interior photos"
-                    hint="Living rooms, kitchen, bedrooms, baths"
-                    accept="image/*"
-                    disabled={busy}
-                    onFiles={(files) => run(() => attachMediaFiles(property.id, files, "interior"))}
-                  />
-                  <h4>Optional video clips</h4>
-                  <PhotoStrip
-                    items={clips}
-                    empty="No clips attached."
-                    onRemove={(id) => run(() => detachPropertyMedia(property.id, id, "video"))}
-                  />
-                  <Dropzone
-                    label="Add walkthrough clips"
-                    hint="Optional MP4 / MOV / WebM"
-                    accept="video/*"
-                    disabled={busy}
-                    onFiles={(files) => run(() => attachMediaFiles(property.id, files, "video"))}
-                  />
-                  <div className="row" style={{marginTop: 28}}>
-                    <button
-                      className="btn danger"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => {
-                        if (!window.confirm(`Remove ${property.address}?`)) return;
-                        run(async () => {
-                          await request(`/properties/${property.id}`, {method: "DELETE"});
-                          setEditingProperty(null);
-                          setPropertyScreen("list");
-                          setJobForm((current) => (
-                            current.propertyId === property.id
-                              ? {...current, propertyId: ""}
-                              : current
-                          ));
-                        });
-                      }}
-                    >
-                      Remove listing
-                    </button>
-                  </div>
+                    onClick={() => {
+                      if (!window.confirm(`Remove ${property.address}?`)) return;
+                      run(async () => {
+                        await request(`/properties/${property.id}`, {method: "DELETE"});
+                        clearPendingMedia();
+                        setEditingProperty(null);
+                        setPropertyScreen("list");
+                        setJobForm((current) => (
+                          current.propertyId === property.id
+                            ? {...current, propertyId: ""}
+                            : current
+                        ));
+                      });
+                    }}
+                  >
+                    Remove listing
+                  </button>
                 </div>
               ) : null}
             </>
@@ -765,13 +893,27 @@ export function App() {
         {page === "Templates" && (
           <>
             <h1>Templates</h1>
-            <div className="grid">
+            <p className="lede">Seven listing films on the same UPCA composition. Photos crop to the format you pick on Video Jobs: 9:16, 16:9, or 1:1.</p>
+            <div className="properties-grid">
               {templates.map((template) => (
-                <div className="card" key={template.id}>
+                <article className="card property-card" key={template.id}>
+                  <p className="kicker" style={{marginBottom: 8}}>{template.headline || template.videoType}</p>
                   <h3>{template.name}</h3>
-                  <p>{template.videoType} · {template.duration}s · {template.compositionId}</p>
-                  <p>{template.audience}</p>
-                </div>
+                  <p>{template.duration}s · {template.fps}fps · {template.compositionId}</p>
+                  <p>{template.ctaText}</p>
+                  <div className="row">
+                    <button
+                      className="btn"
+                      type="button"
+                      onClick={() => {
+                        setJobForm((current) => ({...current, templateId: template.id}));
+                        setPage("Video Jobs");
+                      }}
+                    >
+                      Use template
+                    </button>
+                  </div>
+                </article>
               ))}
             </div>
           </>

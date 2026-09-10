@@ -1,0 +1,20 @@
+id: coming-soon
+name: Coming Soon
+audience: property
+videoType: Coming Soon
+duration: 30
+fps: 30
+compositionId: UPCAJustListed
+rendererFamily: upca-just-listed
+headline: COMING SOON
+ctaText: GET NOTIFIED
+livingLabel: FIRST LOOK
+roomsLabel: INSIDE
+statsKicker: COMING IN AT
+locationKicker: THE AREA
+requiredFields:
+  - address
+  - city
+  - province
+  - price
+  - agent

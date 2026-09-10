@@ -1,0 +1,20 @@
+id: open-house
+name: Open House
+audience: property
+videoType: Open House
+duration: 30
+fps: 30
+compositionId: UPCAJustListed
+rendererFamily: upca-just-listed
+headline: OPEN HOUSE
+ctaText: JOIN THE OPEN HOUSE
+livingLabel: WALK THROUGH
+roomsLabel: PRIVATE ROOMS
+statsKicker: LISTED AT
+locationKicker: FIND US
+requiredFields:
+  - address
+  - city
+  - province
+  - price
+  - agent

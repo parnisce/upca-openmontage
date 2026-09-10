@@ -1,0 +1,1 @@
+"""UPCA FastAPI application."""

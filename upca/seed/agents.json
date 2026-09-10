@@ -1,0 +1,16 @@
+[
+  {
+    "id": "agent-sample",
+    "name": "Alex Rivera",
+    "photoMediaId": "",
+    "phone": "604-555-0148",
+    "email": "alex.rivera@upca.example",
+    "website": "https://upca.example/alex-rivera",
+    "brokerage": "UPCA Real Estate",
+    "logoMediaId": "",
+    "socialLinks": {
+      "instagram": "https://instagram.com/upca",
+      "facebook": "https://facebook.com/upca"
+    }
+  }
+]

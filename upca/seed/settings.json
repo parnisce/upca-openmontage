@@ -1,0 +1,20 @@
+{
+  "branding": {
+    "name": "UPCA Real Estate Marketing",
+    "logo": "",
+    "primaryColor": "#C4A35A",
+    "secondaryColor": "#0F1C24",
+    "fonts": {
+      "heading": "Cormorant Garamond",
+      "body": "Inter"
+    }
+  },
+  "cta": {
+    "text": "BOOK A SHOWING",
+    "phone": "",
+    "website": ""
+  },
+  "defaultFormat": "9:16",
+  "defaultFps": 30,
+  "voiceoverEnabled": false
+}

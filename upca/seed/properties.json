@@ -1,0 +1,27 @@
+[
+  {
+    "id": "prop-oak-street",
+    "address": "1842 Oak Street",
+    "city": "Vancouver",
+    "province": "BC",
+    "postalCode": "V6J 3C7",
+    "price": "2149000",
+    "bedrooms": 4,
+    "bathrooms": 3,
+    "squareFeet": 2680,
+    "propertyType": "Detached",
+    "description": "A light-filled Kitsilano home with a chef's kitchen, landscaped garden, and walkable access to the beach.",
+    "features": [
+      "Chef's kitchen",
+      "South-facing garden",
+      "Primary suite with spa bath",
+      "Two-car garage",
+      "Walk to Kits Beach"
+    ],
+    "mediaIds": {
+      "exteriorPhotos": [],
+      "interiorPhotos": [],
+      "videoClips": []
+    }
+  }
+]

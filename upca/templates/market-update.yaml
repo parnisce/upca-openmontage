@@ -1,0 +1,20 @@
+id: market-update
+name: Market Update
+audience: property
+videoType: Market Update
+duration: 30
+fps: 30
+compositionId: UPCAJustListed
+rendererFamily: upca-just-listed
+headline: MARKET UPDATE
+ctaText: TALK TO AN AGENT
+livingLabel: LOCAL HOMES
+roomsLabel: INSIDE
+statsKicker: ASKING
+locationKicker: THE MARKET
+requiredFields:
+  - address
+  - city
+  - province
+  - price
+  - agent
